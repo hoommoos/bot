@@ -2,36 +2,32 @@
 # -*- coding: utf-8 -*-
 
 import os
+import urllib
+from random import randint, sample, choice
+from time import sleep
+
 import chromedriver_autoinstaller
+from anticaptchaofficial.recaptchav2enterpriseproxyon import *
+from loguru import logger
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
     NoSuchElementException,
     TimeoutException,
     StaleElementReferenceException,
-    ElementClickInterceptedException,
-    ElementNotInteractableException,
 )
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from time import sleep
-from random import randint, sample, choice
-from datetime import datetime
-from helpers import TelegramMessages
-import requests
-import time
-from loguru import logger
-from anticaptchaofficial.recaptchav2enterpriseproxyon import *
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 if not os.path.exists('cache'):
     os.mkdir('cache')
 
 logger.add("debug.log", rotation="50 MB")
-
-tg = TelegramMessages()
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Settings
 LOGIN = os.environ.get("TIDAL_LOGIN", None)
@@ -40,6 +36,10 @@ ARTIST_URL = os.environ.get("ARTIST_URL", None)
 IMPLICITLY_WAIT = int(os.environ.get("IMPLICITLY_WAIT"))
 LOGIN_IMPLICITLY_WAIT = int(os.environ.get("LOGIN_IMPLICITLY_WAIT"))
 ANTI_CAPTCHA_API = os.environ.get("ANTI_CAPTCHA_API", None)
+SERVER_IP = requests.get("https://ipinfo.io/ip").content.decode("utf-8")
+SERVER_PORT = os.environ.get("INSTANCE_PORT", None)
+EXTERNAL_API_DOMAIN = os.environ.get('EXTERNAL_API_DOMAIN', None)
+EXTERNAL_API_KEY = os.environ.get('EXTERNAL_API_KEY', None)
 
 # Recaptcha Solver API
 solver = recaptchaV2EnterpriseProxyon()
@@ -47,7 +47,6 @@ solver.set_verbose(0)
 solver.set_key(ANTI_CAPTCHA_API)
 solver.set_website_url("https://login.tidal.com/")
 solver.set_website_key("6LcaN-0UAAAAAN056lYOwirUdIJ70tvy9QwNBajZ")
-
 
 FAV_ARTISTS = [
     "Lady Gaga",
@@ -76,15 +75,51 @@ USER_AGENTS = (
 )
 
 
+class ExternalApi:
+    def __init__(self):
+        self.domain = EXTERNAL_API_DOMAIN
+        self.key = EXTERNAL_API_KEY
+        self.server_ip = SERVER_IP
+        self.server_port = SERVER_PORT
+
+    def post(self, endpoint: str, params: dict):
+        params_dict = {
+            'ip': self.server_ip,
+            'port': self.server_port,
+            'auth': self.key,
+            **params
+        }
+        parse_dict = urllib.parse.urlencode(params_dict, doseq=True)
+        url = 'https://{0}/api/{1}?{2}'.format(self.domain, endpoint, parse_dict)
+        print(url)
+        try:
+            requests.post(url.strip(), verify=False, timeout=(1, 3))
+            logger.success('Successfully POST request to external api')
+        except requests.ConnectionError:
+            logger.warning('Failed to send POST request to external api')
+
+    def get(self, endpoint: str, params: dict):
+        parse_dict = urllib.parse.urlencode(params, doseq=True)
+        url = 'https://{0}/api/{1}?{2}'.format(self.domain, endpoint, parse_dict)
+        try:
+            requests.get(url, timeout=(0.1, 3))
+            logger.success('Successfully GET request to external api')
+        except requests.ConnectionError:
+            logger.warning('Failed to send GET request to external api')
+
+
+api = ExternalApi()
+
+
 class TidalPlayer:
     def __init__(
-        self,
-        email,
-        password,
-        artist_url,
-        implicitly_wait,
-        login_implicitly_wait=1,
-        headless=False,
+            self,
+            email,
+            password,
+            artist_url,
+            implicitly_wait,
+            login_implicitly_wait=1,
+            headless=False,
     ):
 
         self.chromedriver()
@@ -145,15 +180,19 @@ class TidalPlayer:
         finally:
             logger.debug("Chromedriver is ok.")
 
-    def check(self):
-        if self.email is None:
-            raise KeyError("No LOGIN variable")
-        if self.password is None:
-            raise KeyError("No PASSWORD variable")
-        if self.artist_url is None:
-            raise KeyError("No ARTIST URL variable")
-
     def login(self):
+
+        api.post(
+            'add_instance',
+            {
+                'instance_name': self.instance_name.upper(),
+                'is_active': True,
+                'log_message': 'Instance started.',
+                'email': self.email,
+                'password': self.password,
+            }
+        )
+
         def fill_form():
             """Fill out the form and submit"""
             logger.debug("Started to filling out the form")
@@ -433,6 +472,13 @@ class TidalPlayer:
             pass
 
     def playing(self):
+        api.post(
+            'update_instance',
+            {
+                'is_active': True,
+                'log_message': 'Playing...'
+            }
+        )
         while True:
             try:
                 sleep(1)
@@ -553,10 +599,13 @@ class TidalPlayer:
                     self.playing()
             except Exception as exception:
                 logger.error("Exception raised" + str(exception))
-                tg.make_request(
-                    "🔴 EXCEPTION RAISED!\n\nInstance: {0}:{1}.\n\nException: \n{2}".format(
-                        self.server_ip, str(self.server_port), str(exception)
-                    )
+                api.post(
+                    'update_instance',
+                    {
+                        'is_active': False,
+                        'exception': str(exception),
+                        'log_message': 'Exited by exception'
+                    }
                 )
                 logger.warning("Trying to restart process after wait 30 sec...")
                 sleep(30)
