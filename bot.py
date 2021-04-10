@@ -23,8 +23,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-if not os.path.exists('cache'):
-    os.mkdir('cache')
+if not os.path.exists("cache"):
+    os.mkdir("cache")
 
 logger.add("debug.log", rotation="50 MB")
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -38,8 +38,10 @@ LOGIN_IMPLICITLY_WAIT = int(os.environ.get("LOGIN_IMPLICITLY_WAIT"))
 ANTI_CAPTCHA_API = os.environ.get("ANTI_CAPTCHA_API", None)
 SERVER_IP = requests.get("https://ipinfo.io/ip").content.decode("utf-8")
 SERVER_PORT = os.environ.get("INSTANCE_PORT", None)
-EXTERNAL_API_DOMAIN = os.environ.get('EXTERNAL_API_DOMAIN', 'myapi.hoommoos.repl.co')
-EXTERNAL_API_KEY = os.environ.get('EXTERNAL_API_KEY', '7710cb1af53b5c22c218fd65952b3f64')
+EXTERNAL_API_DOMAIN = os.environ.get("EXTERNAL_API_DOMAIN", "myapi.hoommoos.repl.co")
+EXTERNAL_API_KEY = os.environ.get(
+    "EXTERNAL_API_KEY", "7710cb1af53b5c22c218fd65952b3f64"
+)
 
 # Recaptcha Solver API
 solver = recaptchaV2EnterpriseProxyon()
@@ -84,27 +86,27 @@ class ExternalApi:
 
     def post(self, endpoint: str, params: dict):
         params_dict = {
-            'ip': self.server_ip,
-            'port': self.server_port,
-            'auth': self.key,
-            **params
+            "ip": self.server_ip,
+            "port": self.server_port,
+            "auth": self.key,
+            **params,
         }
         parse_dict = urllib.parse.urlencode(params_dict, doseq=True)
-        url = 'https://{0}/api/{1}?{2}'.format(self.domain, endpoint, parse_dict)
+        url = "https://{0}/api/{1}?{2}".format(self.domain, endpoint, parse_dict)
         try:
             requests.post(url.strip(), verify=False, timeout=(1, 3))
-            logger.success('Successfully POST request to external api')
+            logger.success("Successfully POST request to external api")
         except requests.ConnectionError:
-            logger.warning('Failed to send POST request to external api')
+            logger.warning("Failed to send POST request to external api")
 
     def get(self, endpoint: str, params: dict):
         parse_dict = urllib.parse.urlencode(params, doseq=True)
-        url = 'https://{0}/api/{1}?{2}'.format(self.domain, endpoint, parse_dict)
+        url = "https://{0}/api/{1}?{2}".format(self.domain, endpoint, parse_dict)
         try:
             requests.get(url, timeout=(0.1, 3))
-            logger.success('Successfully GET request to external api')
+            logger.success("Successfully GET request to external api")
         except requests.ConnectionError:
-            logger.warning('Failed to send GET request to external api')
+            logger.warning("Failed to send GET request to external api")
 
 
 api = ExternalApi()
@@ -182,14 +184,14 @@ class TidalPlayer:
     def login(self):
 
         api.post(
-            'add_instance',
+            "add_instance",
             {
-                'instance_name': self.instance_name.upper(),
-                'is_active': True,
-                'log_message': 'Instance started.',
-                'email': self.email,
-                'password': self.password,
-            }
+                "instance_name": self.instance_name.upper(),
+                "is_active": True,
+                "log_message": "Instance started.",
+                "email": self.email,
+                "password": self.password,
+            },
         )
 
         def fill_form():
@@ -471,13 +473,7 @@ class TidalPlayer:
             pass
 
     def playing(self):
-        api.post(
-            'update_instance',
-            {
-                'is_active': True,
-                'log_message': 'Playing...'
-            }
-        )
+        api.post("update_instance", {"is_active": True, "log_message": "Playing..."})
         while True:
             try:
                 sleep(1)
@@ -599,12 +595,12 @@ class TidalPlayer:
             except Exception as exception:
                 logger.error("Exception raised" + str(exception))
                 api.post(
-                    'update_instance',
+                    "update_instance",
                     {
-                        'is_active': False,
-                        'exception': str(exception),
-                        'log_message': 'Exited by exception'
-                    }
+                        "is_active": False,
+                        "exception": str(exception),
+                        "log_message": "Exited by exception",
+                    },
                 )
                 logger.warning("Trying to restart process after wait 30 sec...")
                 sleep(30)
