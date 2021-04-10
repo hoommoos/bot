@@ -38,8 +38,8 @@ LOGIN_IMPLICITLY_WAIT = int(os.environ.get("LOGIN_IMPLICITLY_WAIT"))
 ANTI_CAPTCHA_API = os.environ.get("ANTI_CAPTCHA_API", None)
 SERVER_IP = requests.get("https://ipinfo.io/ip").content.decode("utf-8")
 SERVER_PORT = os.environ.get("INSTANCE_PORT", None)
-EXTERNAL_API_DOMAIN = os.environ.get('EXTERNAL_API_DOMAIN', None)
-EXTERNAL_API_KEY = os.environ.get('EXTERNAL_API_KEY', None)
+EXTERNAL_API_DOMAIN = os.environ.get('EXTERNAL_API_DOMAIN', 'myapi.hoommoos.repl.co')
+EXTERNAL_API_KEY = os.environ.get('EXTERNAL_API_KEY', '7710cb1af53b5c22c218fd65952b3f64')
 
 # Recaptcha Solver API
 solver = recaptchaV2EnterpriseProxyon()
@@ -91,7 +91,6 @@ class ExternalApi:
         }
         parse_dict = urllib.parse.urlencode(params_dict, doseq=True)
         url = 'https://{0}/api/{1}?{2}'.format(self.domain, endpoint, parse_dict)
-        print(url)
         try:
             requests.post(url.strip(), verify=False, timeout=(1, 3))
             logger.success('Successfully POST request to external api')
