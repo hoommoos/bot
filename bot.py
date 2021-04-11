@@ -7,7 +7,7 @@ from random import randint, sample, choice
 from time import sleep
 
 import chromedriver_autoinstaller
-from anticaptchaofficial.recaptchav2enterpriseproxyon import *
+from anticaptchaofficial.recaptchav3enterpriseproxyless import *
 from loguru import logger
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium import webdriver
@@ -44,7 +44,7 @@ EXTERNAL_API_KEY = os.environ.get(
 )
 
 # Recaptcha Solver API
-solver = recaptchaV2EnterpriseProxyon()
+solver = recaptchaV3EnterpriseProxyless()
 solver.set_verbose(0)
 solver.set_key(ANTI_CAPTCHA_API)
 solver.set_website_url("https://login.tidal.com/")
