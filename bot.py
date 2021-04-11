@@ -45,7 +45,7 @@ EXTERNAL_API_KEY = os.environ.get(
 
 # Recaptcha Solver API
 solver = recaptchaV2EnterpriseProxyon()
-solver.set_verbose(0)
+solver.set_verbose(1)
 solver.set_key(ANTI_CAPTCHA_API)
 solver.set_website_url("https://login.tidal.com/")
 solver.set_website_key("6LcaN-0UAAAAAN056lYOwirUdIJ70tvy9QwNBajZ")
