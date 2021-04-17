@@ -96,8 +96,9 @@ class ExternalApi:
         try:
             requests.post(url.strip(), verify=False, timeout=(1, 3))
             logger.success("Successfully POST request to external api")
-        except requests.ConnectionError:
+        except:
             logger.warning("Failed to send POST request to external api")
+            pass
 
     def get(self, endpoint: str, params: dict):
         parse_dict = urllib.parse.urlencode(params, doseq=True)
@@ -105,8 +106,9 @@ class ExternalApi:
         try:
             requests.get(url, timeout=(0.1, 3))
             logger.success("Successfully GET request to external api")
-        except requests.ConnectionError:
+        except:
             logger.warning("Failed to send GET request to external api")
+            pass
 
 
 api = ExternalApi()
