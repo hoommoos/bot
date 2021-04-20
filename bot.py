@@ -23,6 +23,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+import sentry_sdk
+
 if not os.path.exists("cache"):
     os.mkdir("cache")
 
@@ -41,6 +43,12 @@ SERVER_PORT = os.environ.get("INSTANCE_PORT", None)
 EXTERNAL_API_DOMAIN = os.environ.get("EXTERNAL_API_DOMAIN", "myapi.hoommoos.repl.co")
 EXTERNAL_API_KEY = os.environ.get(
     "EXTERNAL_API_KEY", "7710cb1af53b5c22c218fd65952b3f64"
+)
+SENTRY_ADDRESS = os.environ.get("SENTRY", None)
+
+sentry_sdk.init(
+    SENTRY_ADDRESS,
+    traces_sample_rate=1.0
 )
 
 # Recaptcha Solver API
