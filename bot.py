@@ -20,7 +20,6 @@ from selenium.common.exceptions import (
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -45,10 +44,7 @@ EXTERNAL_API_KEY = os.environ.get(
 )
 SENTRY_ADDRESS = os.environ.get("SENTRY", None)
 
-sentry_sdk.init(
-    SENTRY_ADDRESS,
-    traces_sample_rate=1.0
-)
+sentry_sdk.init(SENTRY_ADDRESS, traces_sample_rate=1.0)
 
 # Recaptcha Solver API
 solver = recaptchaV2EnterpriseProxyless()
@@ -227,7 +223,8 @@ class TidalPlayer:
                     logger.warning("A window with captcha appeared")
                     logger.warning("Solving captcha in process")
 
-                    g_response = solver.solve_and_return_solution()
+                    # g_response = solver.solve_and_return_solution()
+                    g_response = 1
 
                     logger.warning("Received the response from solver")
                     if g_response != 0:
@@ -235,17 +232,19 @@ class TidalPlayer:
                             'document.getElementById("g-recaptcha-response").innerHTML = "%s"'
                             % g_response
                         )
-                        window = self.driver.find_element_by_xpath(
-                            '//iframe[contains(@title, "recaptcha")]'
-                        )
-                        window.send_keys(Keys.ESCAPE)
+                        # window = self.driver.find_element_by_xpath(
+                        #     '//iframe[contains(@title, "recaptcha")]'
+                        # )
+                        # window.send_keys(Keys.ESCAPE)
 
                         self.driver.implicitly_wait(5)
                         next_step = self.driver.find_element_by_id("recap-invisible")
                         next_step.click()
 
                         try:
-                            logger.warning("Waiting 320 while captcha is solving manually.")
+                            logger.warning(
+                                "Waiting 320 while captcha is solving manually."
+                            )
                             WebDriverWait(self.driver, 920).until(
                                 EC.presence_of_element_located(
                                     (
