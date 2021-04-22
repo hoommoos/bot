@@ -29,6 +29,13 @@ if not os.path.exists("cache"):
 logger.add("debug.log", rotation="50 MB")
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+# Download CRX
+try:
+    urllib.request.urlretrieve("https://antcpt.com/downloads/anticaptcha/chrome/anticaptcha-plugin_v0.52.crx",
+                               "anticaptcha_latest.crx")
+except:
+    pass
+
 # Settings
 LOGIN = os.environ.get("TIDAL_LOGIN", None)
 PASSWORD = os.environ.get("TIDAL_PASSWORD", None)
@@ -38,7 +45,6 @@ LOGIN_IMPLICITLY_WAIT = int(os.environ.get("LOGIN_IMPLICITLY_WAIT"))
 ANTI_CAPTCHA_API = os.environ.get("ANTI_CAPTCHA_API", None)
 SERVER_IP = requests.get("https://ipinfo.io/ip").content.decode("utf-8")
 SERVER_PORT = os.environ.get("INSTANCE_PORT", None)
-EXTERNAL_API_DOMAIN = os.environ.get("EXTERNAL_API_DOMAIN", "myapi.hoommoos.repl.co")
 EXTERNAL_API_KEY = os.environ.get(
     "EXTERNAL_API_KEY", "7710cb1af53b5c22c218fd65952b3f64"
 )
@@ -80,43 +86,6 @@ USER_AGENTS = (
 )
 
 
-class ExternalApi:
-    def __init__(self):
-        self.domain = EXTERNAL_API_DOMAIN
-        self.key = EXTERNAL_API_KEY
-        self.server_ip = SERVER_IP
-        self.server_port = SERVER_PORT
-
-    def post(self, endpoint: str, params: dict):
-        params_dict = {
-            "ip": self.server_ip,
-            "port": self.server_port,
-            "auth": self.key,
-            **params,
-        }
-        parse_dict = urllib.parse.urlencode(params_dict, doseq=True)
-        url = "https://{0}/api/{1}?{2}".format(self.domain, endpoint, parse_dict)
-        try:
-            requests.post(url.strip(), verify=False, timeout=(1, 3))
-            logger.success("Successfully POST request to external api")
-        except:
-            logger.warning("Failed to send POST request to external api")
-            pass
-
-    def get(self, endpoint: str, params: dict):
-        parse_dict = urllib.parse.urlencode(params, doseq=True)
-        url = "https://{0}/api/{1}?{2}".format(self.domain, endpoint, parse_dict)
-        try:
-            requests.get(url, timeout=(0.1, 3))
-            logger.success("Successfully GET request to external api")
-        except:
-            logger.warning("Failed to send GET request to external api")
-            pass
-
-
-api = ExternalApi()
-
-
 class TidalPlayer:
     def __init__(
             self,
@@ -141,6 +110,8 @@ class TidalPlayer:
         self.server_port = os.environ.get("INSTANCE_PORT")
 
         self.chrome_options = Options()
+
+        self.chrome_options.add_extension('anticaptcha_latest.crx')
 
         self.options = (
             "--no-sandbox",
@@ -186,20 +157,26 @@ class TidalPlayer:
         finally:
             logger.debug("Chromedriver is ok.")
 
+    def acp_api_send_request(self, message_type, data: dict):
+        message = {
+            'receiver': 'antiCaptchaPlugin',
+            'type': message_type,
+            **data
+        }
+        return self.driver.execute_script("""
+        return window.postMessage({});
+        """.format(json.dumps(message)))
+
     def login(self):
 
-        api.post(
-            "add_instance",
-            {
-                "instance_name": self.instance_name.upper(),
-                "is_active": True,
-                "log_message": "Instance started.",
-                "email": self.email,
-                "password": self.password,
-            },
-        )
-
         def fill_form():
+
+            try:
+                WebDriverWait(self.driver, 10).until(
+                    lambda x: x.find_element_by_css_selector('.antigate_solver.solved'))
+            except NoSuchElementException:
+                raise
+
             """Fill out the form and submit"""
             logger.debug("Started to filling out the form")
             login_field = self.driver.find_element_by_css_selector(
@@ -212,8 +189,6 @@ class TidalPlayer:
 
             self.driver.implicitly_wait(5)
 
-            sleep(3)
-
             if EC.frame_to_be_available_and_switch_to_it(0):
 
                 try:
@@ -225,6 +200,18 @@ class TidalPlayer:
 
                     # g_response = solver.solve_and_return_solution()
                     g_response = 1
+
+                    self.acp_api_send_request(
+                        'setOptions',
+                        {
+                            'options': {
+                                'antiCaptchaApiKey': 'c1d44f165be66c2f63dc28a6608f67b6',
+                            }
+                        }
+                    )
+
+                    WebDriverWait(self.driver, 120).until(
+                        lambda x: x.find_element_by_css_selector('.antigate_solver.solved'))
 
                     logger.warning("Received the response from solver")
                     if g_response != 0:
@@ -480,7 +467,6 @@ class TidalPlayer:
             pass
 
     def playing(self):
-        api.post("update_instance", {"is_active": True, "log_message": "Playing..."})
         while True:
             try:
                 sleep(1)
@@ -601,14 +587,6 @@ class TidalPlayer:
                     self.playing()
             except Exception as exception:
                 logger.error("Exception raised" + str(exception))
-                api.post(
-                    "update_instance",
-                    {
-                        "is_active": False,
-                        "exception": str(exception),
-                        "log_message": "Exited by exception",
-                    },
-                )
                 logger.warning("Trying to restart process after wait 30 sec...")
                 sleep(30)
                 self.run()
