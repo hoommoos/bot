@@ -178,79 +178,80 @@ class TidalPlayer:
             login_field.clear()
             login_field.send_keys(self.email)
             next_step = self.driver.find_element_by_id("recap-invisible")
+
+            self.acp_api_send_request(
+                'setOptions',
+                {
+                    'options': {
+                        'antiCaptchaApiKey': 'c1d44f165be66c2f63dc28a6608f67b6',
+                    }
+                }
+            )
+
+            WebDriverWait(self.driver, 120).until(
+                lambda x: x.find_element_by_css_selector('.antigate_solver.solved'))
+
             next_step.click()
 
             self.driver.implicitly_wait(5)
 
-            if EC.frame_to_be_available_and_switch_to_it(0):
-
-                try:
-                    self.driver.find_element_by_xpath('//*[@id="password"]').click()
-                    logger.debug("Carried over, the captcha window did not appear")
-                except NoSuchElementException:
-                    logger.warning("A window with captcha appeared")
-                    logger.warning("Solving captcha in process")
-
-                    # g_response = solver.solve_and_return_solution()
-                    g_response = 1
-
-                    self.acp_api_send_request(
-                        'setOptions',
-                        {
-                            'options': {
-                                'antiCaptchaApiKey': 'c1d44f165be66c2f63dc28a6608f67b6',
-                            }
-                        }
-                    )
-
-                    WebDriverWait(self.driver, 120).until(
-                        lambda x: x.find_element_by_css_selector('.antigate_solver.solved'))
-
-                    logger.warning("Received the response from solver")
-                    if g_response != 0:
-                        self.driver.execute_script(
-                            'document.getElementById("g-recaptcha-response").innerHTML = "%s"'
-                            % g_response
-                        )
-                        # window = self.driver.find_element_by_xpath(
-                        #     '//iframe[contains(@title, "recaptcha")]'
-                        # )
-                        # window.send_keys(Keys.ESCAPE)
-
-                        self.driver.implicitly_wait(5)
-                        next_step = self.driver.find_element_by_id("recap-invisible")
-                        next_step.click()
-
-                        try:
-                            logger.warning(
-                                "Waiting 320 while captcha is solving manually."
-                            )
-                            WebDriverWait(self.driver, 920).until(
-                                EC.presence_of_element_located(
-                                    (
-                                        By.XPATH,
-                                        '//*[@id="password"]',
-                                    )
-                                )
-                            )
-                        except (NoSuchElementException, StaleElementReferenceException):
-                            logger.error("An error while solving captcha appeared.")
-                            raise Exception("An error while solving captcha appeared.")
-                    else:
-                        if EC.visibility_of_element_located(
-                                (
-                                        By.CSS_SELECTOR,
-                                        "input[class*='client-input'][name='email']",
-                                )
-                        ) and EC.visibility_of_element_located(
-                            (
-                                    By.XPATH,
-                                    '//*[@id="password"]',
-                            )
-                        ):
-                            logger.success("Captcha solved successfully")
-                        else:
-                            raise Exception("Login Error while trying to solve captcha")
+            # if EC.frame_to_be_available_and_switch_to_it(0):
+            #
+            #     try:
+            #         self.driver.find_element_by_xpath('//*[@id="password"]').click()
+            #         logger.debug("Carried over, the captcha window did not appear")
+            #     except NoSuchElementException:
+            #         logger.warning("A window with captcha appeared")
+            #         logger.warning("Solving captcha in process")
+            #
+            #         # g_response = solver.solve_and_return_solution()
+            #         g_response = 1
+            #
+            #         logger.warning("Received the response from solver")
+            #         if g_response != 0:
+            #             self.driver.execute_script(
+            #                 'document.getElementById("g-recaptcha-response").innerHTML = "%s"'
+            #                 % g_response
+            #             )
+            #             # window = self.driver.find_element_by_xpath(
+            #             #     '//iframe[contains(@title, "recaptcha")]'
+            #             # )
+            #             # window.send_keys(Keys.ESCAPE)
+            #
+            #             self.driver.implicitly_wait(5)
+            #             next_step = self.driver.find_element_by_id("recap-invisible")
+            #             next_step.click()
+            #
+            #             try:
+            #                 logger.warning(
+            #                     "Waiting 320 while captcha is solving manually."
+            #                 )
+            #                 WebDriverWait(self.driver, 920).until(
+            #                     EC.presence_of_element_located(
+            #                         (
+            #                             By.XPATH,
+            #                             '//*[@id="password"]',
+            #                         )
+            #                     )
+            #                 )
+            #             except (NoSuchElementException, StaleElementReferenceException):
+            #                 logger.error("An error while solving captcha appeared.")
+            #                 raise Exception("An error while solving captcha appeared.")
+            #         else:
+            #             if EC.visibility_of_element_located(
+            #                     (
+            #                             By.CSS_SELECTOR,
+            #                             "input[class*='client-input'][name='email']",
+            #                     )
+            #             ) and EC.visibility_of_element_located(
+            #                 (
+            #                         By.XPATH,
+            #                         '//*[@id="password"]',
+            #                 )
+            #             ):
+            #                 logger.success("Captcha solved successfully")
+            #             else:
+            #                 raise Exception("Login Error while trying to solve captcha")
 
             WebDriverWait(self.driver, 250).until(
                 EC.presence_of_element_located(
