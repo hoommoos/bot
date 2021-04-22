@@ -285,10 +285,12 @@ class TidalPlayer:
             sleep(5)
             password_field = self.driver.find_element_by_xpath('//*[@id="password"]')
             password_field.send_keys(self.password)
-            login_button = self.driver.find_element_by_xpath(
-                '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form/button'
-            )
-            login_button.click()
+            # login_button = self.driver.find_element_by_xpath(
+            #     '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form/button'
+            # )
+            # login_button = self.driver.find_element_by_xpath('//div[contains(text(), " Log in ")]')
+            # login_button.click()
+            self.driver.find_element_by_xpath('//*[@id="main-content"]/div/div[1]/div/div[2]/div/form').submit()
 
             if EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "div[class^='artistPickerContainer']")
@@ -397,7 +399,7 @@ class TidalPlayer:
                     "Artist has been successfully selected in the first run window"
                 )
         except (NoSuchElementException, WebDriverException, ValueError):
-            raise
+            pass
 
     def get_album_page(self):
         try:
@@ -602,7 +604,6 @@ class TidalPlayer:
                     self.playing()
             except Exception as exception:
                 logger.error("Exception raised" + str(exception))
-                raise
                 logger.warning("Trying to restart process after wait 30 sec...")
                 sleep(30)
                 self.run()
