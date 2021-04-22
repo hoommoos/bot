@@ -178,7 +178,6 @@ class TidalPlayer:
             )
             login_field.clear()
             login_field.send_keys(self.email)
-            next_step = self.driver.find_element_by_id("recap-invisible")
 
             self.acp_api_send_request(
                 "setOptions",
@@ -193,6 +192,7 @@ class TidalPlayer:
                 lambda x: x.find_element_by_css_selector(".antigate_solver.solved")
             )
 
+            next_step = self.driver.find_element_by_id("recap-invisible")
             next_step.click()
 
             self.driver.implicitly_wait(5)
@@ -327,7 +327,7 @@ class TidalPlayer:
                 fill_form()
 
             except (NoSuchElementException, TimeoutException):
-                pass
+                raise
 
             try:
                 WebDriverWait(self.driver, self.login_implicitly_wait).until(
@@ -345,7 +345,7 @@ class TidalPlayer:
                 continue_button.click()
                 fill_form()
             except (NoSuchElementException, TimeoutException):
-                pass
+                raise
 
             if assert_home():
                 break
