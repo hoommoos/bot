@@ -255,14 +255,14 @@ class TidalPlayer:
             #             else:
             #                 raise Exception("Login Error while trying to solve captcha")
 
-            WebDriverWait(self.driver, 250).until(
-                EC.presence_of_element_located(
-                    (
-                        By.XPATH,
-                        '//*[@id="password"]',
-                    )
-                )
-            )
+            # WebDriverWait(self.driver, 250).until(
+            #     EC.presence_of_element_located(
+            #         (
+            #             By.XPATH,
+            #             '//*[@id="password"]',
+            #         )
+            #     )
+            # )
 
             self.driver.implicitly_wait(5)
             sleep(3)
