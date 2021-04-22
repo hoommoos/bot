@@ -281,7 +281,7 @@ class TidalPlayer:
 
             self.driver.implicitly_wait(5)
 
-            logger.success('Trying to fill out password.')
+            logger.success("Trying to fill out password.")
             sleep(5)
             password_field = self.driver.find_element_by_xpath('//*[@id="password"]')
             password_field.send_keys(self.password)
