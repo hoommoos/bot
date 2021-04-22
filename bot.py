@@ -170,13 +170,6 @@ class TidalPlayer:
     def login(self):
 
         def fill_form():
-
-            try:
-                WebDriverWait(self.driver, 10).until(
-                    lambda x: x.find_element_by_css_selector('.antigate_solver.solved'))
-            except NoSuchElementException:
-                raise
-
             """Fill out the form and submit"""
             logger.debug("Started to filling out the form")
             login_field = self.driver.find_element_by_css_selector(
