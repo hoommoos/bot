@@ -397,7 +397,7 @@ class TidalPlayer:
                     "Artist has been successfully selected in the first run window"
                 )
         except (NoSuchElementException, WebDriverException, ValueError):
-            pass
+            raise
 
     def get_album_page(self):
         try:
@@ -602,6 +602,7 @@ class TidalPlayer:
                     self.playing()
             except Exception as exception:
                 logger.error("Exception raised" + str(exception))
+                raise
                 logger.warning("Trying to restart process after wait 30 sec...")
                 sleep(30)
                 self.run()
