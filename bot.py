@@ -31,8 +31,10 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Download CRX
 try:
-    urllib.request.urlretrieve("https://antcpt.com/downloads/anticaptcha/chrome/anticaptcha-plugin_v0.52.crx",
-                               "anticaptcha_latest.crx")
+    urllib.request.urlretrieve(
+        "https://antcpt.com/downloads/anticaptcha/chrome/anticaptcha-plugin_v0.52.crx",
+        "anticaptcha_latest.crx",
+    )
 except:
     pass
 
@@ -111,7 +113,7 @@ class TidalPlayer:
 
         self.chrome_options = Options()
 
-        self.chrome_options.add_extension('anticaptcha_latest.crx')
+        self.chrome_options.add_extension("anticaptcha_latest.crx")
 
         self.options = (
             "--no-sandbox",
@@ -158,17 +160,16 @@ class TidalPlayer:
             logger.debug("Chromedriver is ok.")
 
     def acp_api_send_request(self, message_type, data: dict):
-        message = {
-            'receiver': 'antiCaptchaPlugin',
-            'type': message_type,
-            **data
-        }
-        return self.driver.execute_script("""
+        message = {"receiver": "antiCaptchaPlugin", "type": message_type, **data}
+        return self.driver.execute_script(
+            """
         return window.postMessage({});
-        """.format(json.dumps(message)))
+        """.format(
+                json.dumps(message)
+            )
+        )
 
     def login(self):
-
         def fill_form():
             """Fill out the form and submit"""
             logger.debug("Started to filling out the form")
@@ -180,16 +181,17 @@ class TidalPlayer:
             next_step = self.driver.find_element_by_id("recap-invisible")
 
             self.acp_api_send_request(
-                'setOptions',
+                "setOptions",
                 {
-                    'options': {
-                        'antiCaptchaApiKey': 'c1d44f165be66c2f63dc28a6608f67b6',
+                    "options": {
+                        "antiCaptchaApiKey": "c1d44f165be66c2f63dc28a6608f67b6",
                     }
-                }
+                },
             )
 
             WebDriverWait(self.driver, 120).until(
-                lambda x: x.find_element_by_css_selector('.antigate_solver.solved'))
+                lambda x: x.find_element_by_css_selector(".antigate_solver.solved")
+            )
 
             next_step.click()
 
@@ -261,6 +263,8 @@ class TidalPlayer:
                     )
                 )
             )
+
+            self.driver.implicitly_wait(5)
 
             password_field = self.driver.find_element_by_xpath('//*[@id="password"]')
             password_field.send_keys(self.password)
