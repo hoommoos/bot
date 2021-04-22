@@ -195,89 +195,42 @@ class TidalPlayer:
             next_step = self.driver.find_element_by_id("recap-invisible")
             next_step.click()
 
-            self.driver.implicitly_wait(5)
+            WebDriverWait(self.driver, 250).until(
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        '//*[@id="password"]',
+                    ),
+                ),
+                EC.element_located_to_be_selected(
+                    (
+                        By.XPATH,
+                        '//*[@id="password"]',
+                    ),
+                )
+            )
 
-            # if EC.frame_to_be_available_and_switch_to_it(0):
-            #
-            #     try:
-            #         self.driver.find_element_by_xpath('//*[@id="password"]').click()
-            #         logger.debug("Carried over, the captcha window did not appear")
-            #     except NoSuchElementException:
-            #         logger.warning("A window with captcha appeared")
-            #         logger.warning("Solving captcha in process")
-            #
-            #         # g_response = solver.solve_and_return_solution()
-            #         g_response = 1
-            #
-            #         logger.warning("Received the response from solver")
-            #         if g_response != 0:
-            #             self.driver.execute_script(
-            #                 'document.getElementById("g-recaptcha-response").innerHTML = "%s"'
-            #                 % g_response
-            #             )
-            #             # window = self.driver.find_element_by_xpath(
-            #             #     '//iframe[contains(@title, "recaptcha")]'
-            #             # )
-            #             # window.send_keys(Keys.ESCAPE)
-            #
-            #             self.driver.implicitly_wait(5)
-            #             next_step = self.driver.find_element_by_id("recap-invisible")
-            #             next_step.click()
-            #
-            #             try:
-            #                 logger.warning(
-            #                     "Waiting 320 while captcha is solving manually."
-            #                 )
-            #                 WebDriverWait(self.driver, 920).until(
-            #                     EC.presence_of_element_located(
-            #                         (
-            #                             By.XPATH,
-            #                             '//*[@id="password"]',
-            #                         )
-            #                     )
-            #                 )
-            #             except (NoSuchElementException, StaleElementReferenceException):
-            #                 logger.error("An error while solving captcha appeared.")
-            #                 raise Exception("An error while solving captcha appeared.")
-            #         else:
-            #             if EC.visibility_of_element_located(
-            #                     (
-            #                             By.CSS_SELECTOR,
-            #                             "input[class*='client-input'][name='email']",
-            #                     )
-            #             ) and EC.visibility_of_element_located(
-            #                 (
-            #                         By.XPATH,
-            #                         '//*[@id="password"]',
-            #                 )
-            #             ):
-            #                 logger.success("Captcha solved successfully")
-            #             else:
-            #                 raise Exception("Login Error while trying to solve captcha")
-
-            # WebDriverWait(self.driver, 250).until(
-            #     EC.presence_of_element_located(
-            #         (
-            #             By.XPATH,
-            #             '//*[@id="password"]',
-            #         )
-            #     )
-            # )
-
-            self.driver.implicitly_wait(5)
-            sleep(3)
             logger.success("Trying to fill out password.")
             password_field = self.driver.find_element_by_xpath('//*[@id="password"]')
             password_field.send_keys(self.password)
-            # login_button = self.driver.find_element_by_xpath(
-            #     '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form/button'
-            # )
-            # login_button = self.driver.find_element_by_xpath('//div[contains(text(), " Log in ")]')
-            # login_button.click()
-            sleep(3)
-            self.driver.find_element_by_xpath(
-                '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form'
-            ).submit()
+
+            # self.driver.find_element_by_xpath(
+            #     '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form'
+            # ).submit()
+
+            WebDriverWait(self.driver, 250).until(
+                EC.element_to_be_clickable(
+                    (
+                        By.XPATH,
+                        '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form/button',
+                    )
+                )
+            )
+
+            login_button = self.driver.find_element_by_xpath(
+                '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form/button')
+            login_button.click()
+            sleep(5)
 
             if EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "div[class^='artistPickerContainer']")
@@ -316,7 +269,7 @@ class TidalPlayer:
                 fill_form()
 
             except (NoSuchElementException, TimeoutException):
-                raise
+                pass
 
             try:
                 WebDriverWait(self.driver, self.login_implicitly_wait).until(
@@ -334,7 +287,7 @@ class TidalPlayer:
                 continue_button.click()
                 fill_form()
             except (NoSuchElementException, TimeoutException):
-                raise
+                pass
 
             if assert_home():
                 break
