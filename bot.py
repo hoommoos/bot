@@ -7,7 +7,8 @@ from random import randint, sample, choice
 from time import sleep
 
 import chromedriver_autoinstaller
-from anticaptchaofficial.recaptchav2enterpriseproxyon import *
+import sentry_sdk
+from anticaptchaofficial.recaptchav2enterpriseproxyless import *
 from loguru import logger
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium import webdriver
@@ -22,8 +23,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
-import sentry_sdk
 
 if not os.path.exists("cache"):
     os.mkdir("cache")
@@ -52,7 +51,7 @@ sentry_sdk.init(
 )
 
 # Recaptcha Solver API
-solver = recaptchaV2EnterpriseProxyon()
+solver = recaptchaV2EnterpriseProxyless()
 solver.set_verbose(1)
 solver.set_key(ANTI_CAPTCHA_API)
 solver.set_website_url("https://login.tidal.com/")
@@ -231,7 +230,6 @@ class TidalPlayer:
                     g_response = solver.solve_and_return_solution()
 
                     logger.warning("Received the response from solver")
-
                     if g_response != 0:
                         self.driver.execute_script(
                             'document.getElementById("g-recaptcha-response").innerHTML = "%s"'
@@ -243,12 +241,12 @@ class TidalPlayer:
                         window.send_keys(Keys.ESCAPE)
 
                         self.driver.implicitly_wait(5)
-
                         next_step = self.driver.find_element_by_id("recap-invisible")
                         next_step.click()
 
                         try:
-                            WebDriverWait(self.driver, 20).until(
+                            logger.warning("Waiting 320 while captcha is solving manually.")
+                            WebDriverWait(self.driver, 920).until(
                                 EC.presence_of_element_located(
                                     (
                                         By.XPATH,
@@ -261,14 +259,14 @@ class TidalPlayer:
                             raise Exception("An error while solving captcha appeared.")
                     else:
                         if EC.visibility_of_element_located(
-                            (
-                                By.CSS_SELECTOR,
-                                "input[class*='client-input'][name='email']",
-                            )
+                                (
+                                        By.CSS_SELECTOR,
+                                        "input[class*='client-input'][name='email']",
+                                )
                         ) and EC.visibility_of_element_located(
                             (
-                                By.XPATH,
-                                '//*[@id="password"]',
+                                    By.XPATH,
+                                    '//*[@id="password"]',
                             )
                         ):
                             logger.success("Captcha solved successfully")
@@ -292,7 +290,7 @@ class TidalPlayer:
             login_button.click()
 
             if EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "div[class^='artistPickerContainer']")
+                    (By.CSS_SELECTOR, "div[class^='artistPickerContainer']")
             ):
                 self.select_startup_artists()
             else:
@@ -351,10 +349,10 @@ class TidalPlayer:
             if assert_home():
                 break
             if EC.presence_of_element_located(
-                (
-                    By.CSS_SELECTOR,
-                    "div[class^='artistPickerWrapper']",
-                )
+                    (
+                            By.CSS_SELECTOR,
+                            "div[class^='artistPickerWrapper']",
+                    )
             ):
                 self.select_startup_artists()
                 break
@@ -362,19 +360,19 @@ class TidalPlayer:
     def select_startup_artists(self):
         try:
             if EC.presence_of_element_located(
-                (
-                    By.CSS_SELECTOR,
-                    "div[class^='artistPickerWrapper']",
-                )
+                    (
+                            By.CSS_SELECTOR,
+                            "div[class^='artistPickerWrapper']",
+                    )
             ):
                 artists = self.driver.find_elements_by_css_selector(
                     "div[class^='artistWrapper']"
                 )
                 for artist in sample(
-                    self.driver.find_elements_by_css_selector(
-                        "div[class^='artistWrapper']"
-                    ),
-                    5,
+                        self.driver.find_elements_by_css_selector(
+                            "div[class^='artistWrapper']"
+                        ),
+                        5,
                 ):
                     artist.click()
                     self.driver.implicitly_wait(self.login_implicitly_wait)
@@ -512,7 +510,7 @@ class TidalPlayer:
                 start_time = time.time()
 
                 while int(current_time.replace(":", "")) < int(
-                    duration_time.replace(":", "")
+                        duration_time.replace(":", "")
                 ) - randint(10, 20):
                     current_time = self.driver.find_element_by_css_selector(
                         "time[data-test*='current-time']"
@@ -524,7 +522,7 @@ class TidalPlayer:
 
                     timer = time.time()
                     if float(round(timer - start_time)) > round(
-                        float(duration_time.replace(":", ".")) * 60 + 30
+                            float(duration_time.replace(":", ".")) * 60 + 30
                     ):
                         logger.warning(
                             "The timer caught a freeze, forced switching of the track."
@@ -543,10 +541,10 @@ class TidalPlayer:
                             next_button.click()
                             self.driver.implicitly_wait(self.implicitly_wait)
                             if (
-                                now_playing_track
-                                != self.driver.find_element_by_css_selector(
-                                    "div[data-test*='footer-track-title']"
-                                ).text
+                                    now_playing_track
+                                    != self.driver.find_element_by_css_selector(
+                                "div[data-test*='footer-track-title']"
+                            ).text
                             ):
                                 logger.error("Lag. Try to reload playing")
                                 break
@@ -570,18 +568,18 @@ class TidalPlayer:
                     )
                     next_button.click()
                 except (
-                    StaleElementReferenceException,
-                    NoSuchElementException,
-                    TimeoutException,
+                        StaleElementReferenceException,
+                        NoSuchElementException,
+                        TimeoutException,
                 ):
                     self.driver.quit()
                     break
 
                 if (
-                    now_playing_track
-                    != self.driver.find_element_by_css_selector(
-                        "div[data-test*='footer-track-title']"
-                    ).text
+                        now_playing_track
+                        != self.driver.find_element_by_css_selector(
+                    "div[data-test*='footer-track-title']"
+                ).text
                 ):
                     sleep(1)
                     continue
