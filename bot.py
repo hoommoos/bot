@@ -264,25 +264,9 @@ class TidalPlayer:
                 )
             )
 
-            if EC.visibility_of_element_located(
-                    (
-                            By.CSS_SELECTOR,
-                            "input[class*='client-input'][name='email']",
-                    )
-            ) and EC.visibility_of_element_located(
-                (
-                        By.XPATH,
-                        '//*[@id="password"]',
-                )
-            ):
-                logger.success("Captcha solved successfully")
-            else:
-                raise Exception("Login Error while trying to solve captcha")
-
             self.driver.implicitly_wait(5)
-
+            sleep(3)
             logger.success("Trying to fill out password.")
-            sleep(5)
             password_field = self.driver.find_element_by_xpath('//*[@id="password"]')
             password_field.send_keys(self.password)
             # login_button = self.driver.find_element_by_xpath(
@@ -290,6 +274,7 @@ class TidalPlayer:
             # )
             # login_button = self.driver.find_element_by_xpath('//div[contains(text(), " Log in ")]')
             # login_button.click()
+            sleep(3)
             self.driver.find_element_by_xpath(
                 '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form'
             ).submit()
