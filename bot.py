@@ -290,7 +290,9 @@ class TidalPlayer:
             # )
             # login_button = self.driver.find_element_by_xpath('//div[contains(text(), " Log in ")]')
             # login_button.click()
-            self.driver.find_element_by_xpath('//*[@id="main-content"]/div/div[1]/div/div[2]/div/form').submit()
+            self.driver.find_element_by_xpath(
+                '//*[@id="main-content"]/div/div[1]/div/div[2]/div/form'
+            ).submit()
 
             if EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "div[class^='artistPickerContainer']")
